@@ -11,6 +11,7 @@ import org.itxyq.reggie.entity.User;
 import org.itxyq.reggie.service.UserService;
 import org.itxyq.reggie.utils.ValidateCodeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpSession;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author xyq 13127
@@ -33,6 +35,9 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private RedisTemplate redisTemplate;
+
     @ApiOperation(value = "发送验证码短信", notes = "发送验证码短信")
     @ApiImplicitParam(name = "user", value = "User", required = true, dataType = "User")
     @PostMapping("/sendMsg")
@@ -46,8 +51,13 @@ public class UserController {
             log.info("code={}", code);
             //调用阿里云提供的短信服务api完成发送短信
             //SMSUtils.sendMessage("瑞吉外卖", "", phone, code);
+
             //需要将生成的验证码保存到session
-            session.setAttribute(phone, code);
+            //session.setAttribute(phone, code);
+
+            //将生成的验证码缓存到redis中 并设置有效期为5min
+            redisTemplate.opsForValue().set(phone, code, 5, TimeUnit.MINUTES);
+
             return R.success("手机验证码发送成功");
         }
         return R.error("手机号不存在");
@@ -62,7 +72,11 @@ public class UserController {
         //获取验证码
         String code = map.get("code");
         //获取session保存的验证码
-        Object codeInSession = session.getAttribute(phone);
+        //Object codeInSession = session.getAttribute(phone);
+
+        //从redis获取缓存的验证码
+        Object codeInSession = redisTemplate.opsForValue().get(phone);
+
         //进行验证码的比对 (页面提交 和 session 中的比对) 比对成功即表示登录成功
         if (codeInSession != null && codeInSession.equals(code)) {
             LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
@@ -75,6 +89,9 @@ public class UserController {
                 userService.save(user);
             }
             session.setAttribute("user", user.getId());
+            //如果用户登录成功 删除redis中的缓存
+            redisTemplate.delete(phone);
+
             return R.success(user);
         }
         return R.error("用户登录失败");
