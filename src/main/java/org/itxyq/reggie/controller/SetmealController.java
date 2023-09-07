@@ -15,6 +15,8 @@ import org.itxyq.reggie.service.CategoryService;
 import org.itxyq.reggie.service.SetmealService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -39,6 +41,7 @@ public class SetmealController {
 
     @ApiOperation(value = "新增套餐", notes = "新增套餐")
     @ApiImplicitParam(name = "setmealDto", value = "SetmealDto", required = true, dataType = "SetmealDto")
+    @CacheEvict(value = "setmealCache", allEntries = true)
     @PostMapping
     public R<String> save(@RequestBody SetmealDto setmealDto) {
         setmealServicel.saveWithDish(setmealDto);
@@ -83,6 +86,7 @@ public class SetmealController {
     }
 
     @ApiOperation(value = "删除套餐", notes = "删除套餐")
+    @CacheEvict(value = "setmealCache", allEntries = true)
     @DeleteMapping
     public R<String> delete(@RequestParam List<Long> ids) {
         setmealServicel.removeWithDish(ids);
@@ -92,6 +96,7 @@ public class SetmealController {
     //修改前端口味不显示规格bug
     @ApiOperation(value = "套餐数据", notes = "根据条件查询套餐数据")
     @ApiImplicitParam(name = "setmeal", value = "Setmeal", required = true, dataType = "Setmeal")
+    @Cacheable(value = "setmealCache", key = "#setmeal.categoryId + '_' + #setmeal.status")
     @GetMapping("/list")
     public R<List<Setmeal>> list(Setmeal setmeal) {
         //条件构造器

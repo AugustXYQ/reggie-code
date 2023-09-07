@@ -41,7 +41,7 @@ public class UserController {
     @ApiOperation(value = "发送验证码短信", notes = "发送验证码短信")
     @ApiImplicitParam(name = "user", value = "User", required = true, dataType = "User")
     @PostMapping("/sendMsg")
-    public R<String> sendMsg(HttpSession session, @RequestBody User user) {
+    public R<String> sendMsg(@RequestBody User user) {
         //获取手机号
         String phone = user.getPhone();
 
