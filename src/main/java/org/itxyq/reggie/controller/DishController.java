@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
-@Api(value = "/dish", tags = "测试DishController相关api")
+@Api(value = "/dish", tags = "DishController相关api")
 @RequestMapping("/dish")
 public class DishController {
     @Autowired

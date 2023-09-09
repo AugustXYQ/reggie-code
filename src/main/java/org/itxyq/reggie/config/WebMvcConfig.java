@@ -25,6 +25,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
      **/
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        //对swagger进行映射
+        registry.addResourceHandler("doc.html").addResourceLocations("classpath:/META-INF/resources/");
+        registry.addResourceHandler("/webjars/**").addResourceLocations("classpath:/META-INF/resources/webjars/");
         //log.info("开始进行静态资源映射...");
         registry.addResourceHandler("/backend/**").addResourceLocations("classpath:/backend/");
         registry.addResourceHandler("/front/**").addResourceLocations("classpath:/front/");
